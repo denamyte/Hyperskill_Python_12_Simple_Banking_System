@@ -3,11 +3,11 @@ hyperskill_project:
   ide_files: https://stepik.org/media/attachments/lesson/361994/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: Sun, 08 Aug 2021 21:54:53 UTC
+update_date: Tue, 10 Aug 2021 22:23:08 UTC
 stages:
 - id: 591
   step: 9827
-  is_completed: false
+  is_completed: true
 - id: 592
   step: 9828
   is_completed: false
@@ -90,10 +90,6 @@ topics:
   - title: Dictionary
     theory_id: 6481
   2:
-  - title: Introduction to operating systems
-    theory_id: 9704
-  - title: Files
-    theory_id: 13025
   - title: Introduction to databases
     theory_id: 8497
   - title: What is SQL

@@ -6,7 +6,7 @@ class Stage(Enum):
     MAIN_MENU = auto()
     CREATE_ACCOUNT = auto()
     LOG_INTO_ACCOUNT = auto()
-    WRONG_ACCOUNT_DETAILS = auto()
+    LOG_IN_FAILED = auto()
     LOGGED_IN = auto()
     ACCOUNT_MENU = auto()
     ACCOUNT_BALANCE = auto()
@@ -32,9 +32,9 @@ class StateMachine:
             self._state = Stage.MAIN_MENU
 
         elif self._state == Stage.LOG_INTO_ACCOUNT:
-            self._state = Stage.WRONG_ACCOUNT_DETAILS if choice == 0 else Stage.LOGGED_IN
+            self._state = Stage.LOG_IN_FAILED if choice == 0 else Stage.LOGGED_IN
 
-        elif self._state == Stage.WRONG_ACCOUNT_DETAILS:
+        elif self._state == Stage.LOG_IN_FAILED:
             self._state = Stage.MAIN_MENU
 
         elif self._state == Stage.LOGGED_IN:
