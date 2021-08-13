@@ -20,7 +20,9 @@ class DataState:
         account_number = ''
         while not account_number or account_number in self._unique_accounts:
             account_number = Utils.get_random_digit_word(9)
-        return '400000' + account_number + Utils.get_random_digit_word(1)
+
+        _15_digits = '400000' + account_number
+        return _15_digits + str(Utils.calculate_luhn_checksum(_15_digits))
 
     def card_and_pin_are_correct(self, card_number: str, pin: str) -> bool:
         return card_number in self._card_dict and self._card_dict[card_number] == pin

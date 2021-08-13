@@ -328,7 +328,10 @@ files:
     def test_rows_after_closing_account(output: str, value_to_return):
         global card_number, are_all_inputs_read
         with sqlite3.connect(db_file_name) as db:
-            rows = db.execute('SELECT * FROM card WHERE number = \'{}\''.format(card_number)).fetchall()
+            try:
+                rows = db.execute('SELECT * FROM card WHERE number = \'{}\''.format(card_number)).fetchall()
+            except:
+                return CheckResult.wrong("Can't select data from 'card' table!")
             if rows:
                 return CheckResult.wrong('After closing an account, the card number should be deleted from the database.')
         are_all_inputs_read = True
