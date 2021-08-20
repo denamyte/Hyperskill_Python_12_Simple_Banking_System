@@ -1,12 +1,15 @@
 from state_machine import StateMachine
 from data_state import DataState
 from bank_cli import BankCLI
+from db_layer import DBLayer
 
 
 class Controller:
     def __init__(self):
         self._state_machine = StateMachine()
-        self._bank_cli = BankCLI(DataState())
+        db_layer = DBLayer()
+        data_state = DataState(db_layer)
+        self._bank_cli = BankCLI(data_state)
 
     def run(self):
         choice = 0

@@ -3,7 +3,7 @@ hyperskill_project:
   ide_files: https://stepik.org/media/attachments/lesson/361994/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: Thu, 12 Aug 2021 23:02:09 UTC
+update_date: Fri, 20 Aug 2021 21:47:16 UTC
 stages:
 - id: 591
   step: 9827
@@ -39,12 +39,6 @@ topics:
     theory_id: 5913
   - title: Program with numbers
     theory_id: 5872
-  - title: Invoking a function
-    theory_id: 5891
-  - title: Declaring a function
-    theory_id: 5900
-  - title: Scopes
-    theory_id: 6322
   - title: If statement
     theory_id: 5953
   - title: Else statement
@@ -83,6 +77,12 @@ topics:
     theory_id: 6037
   - title: List
     theory_id: 5979
+  - title: Invoking a function
+    theory_id: 5891
+  - title: Declaring a function
+    theory_id: 5900
+  - title: Scopes
+    theory_id: 6322
   - title: Boolean logic
     theory_id: 6025
   - title: Comparisons
