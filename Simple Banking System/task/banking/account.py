@@ -1,4 +1,4 @@
-class Card:
+class Account:
 
     def __init__(self, id: int, number: str, pin: str, balance: int = 0):
         self._id = id
@@ -16,7 +16,7 @@ class Card:
 
     @property
     def pin(self):
-        return self.pin
+        return self._pin
 
     @property
     def balance(self):
@@ -25,3 +25,6 @@ class Card:
     def change_balance(self, amount: int):
         if self._balance + amount > 0:
             self._balance += amount
+
+    def __str__(self):
+        return f'Account: id {self.id}, number {self.number}, pin {self.pin}, balance {self.balance}'

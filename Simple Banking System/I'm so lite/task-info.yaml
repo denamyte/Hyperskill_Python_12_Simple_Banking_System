@@ -1,10 +1,5 @@
 type: edu
 files:
-- name: banking/banking.py
-  visible: true
-  text: |
-    # Write your code here
-  learner_created: false
 - name: tests.py
   visible: false
   text: |
@@ -276,84 +271,6 @@ files:
     if __name__ == '__main__':
         BankingSystem('banking.banking').run_tests()
   learner_created: false
-- name: banking/data_state.py
-  visible: true
-  text: |
-    from typing import Tuple, Dict, Set
-
-    from utils import Utils
-
-
-    class DataState:
-        def __init__(self):
-            self._card_dict: Dict[str, str] = {}
-            self._unique_accounts: Set[str] = set()
-
-        def create_account(self) -> Tuple[str, str]:
-            """Creates a new account, returns the card number and its pin"""
-
-            card_number = self._create_card_number()
-            pin = Utils.get_random_digit_word(4)
-            self._card_dict[card_number] = pin
-            return card_number, pin
-
-        def _create_card_number(self):
-            account_number = ''
-            while not account_number or account_number in self._unique_accounts:
-                account_number = Utils.get_random_digit_word(9)
-
-            _15_digits = '400000' + account_number
-            return _15_digits + str(Utils.calculate_luhn_checksum(_15_digits))
-
-        def card_and_pin_are_correct(self, card_number: str, pin: str) -> bool:
-            return card_number in self._card_dict and self._card_dict[card_number] == pin
-
-        def card_balance(self, card_number: str) -> int:
-            return 0
-  learner_created: true
-- name: banking/controller.py
-  visible: true
-  text: |
-    from state_machine import StateMachine
-    from data_state import DataState
-    from bank_cli import BankCLI
-
-
-    class Controller:
-        def __init__(self):
-            self._state_machine = StateMachine()
-            self._bank_cli = BankCLI(DataState())
-
-        def run(self):
-            choice = 0
-            while self._state_machine.going_on():
-                self._state_machine.switch_state(choice)
-                choice = self._bank_cli.show_menu(self._state_machine.state)
-  learner_created: true
-- name: banking/utils.py
-  visible: true
-  text: |
-    import string
-    import random
-    from itertools import cycle
-
-
-    class Utils:
-        @staticmethod
-        def get_random_digit_word(word_len: int) -> str:
-            """Creates and returns a word of length word_len consisting of random digits"""
-            return ''.join(random.choices(string.digits, k=word_len))
-
-        @staticmethod
-        def calculate_luhn_checksum(num_str: str) -> int:
-            """
-            Calculates the Luhn checksum (a single digit) for a string of digits.
-            At the end of the string passed there should be no symbol of the string checksum.
-            """
-            s = sum(i if i < 10 else i - 9 for i in (x * y for x, y in zip(map(int, num_str[::-1]), cycle([2, 1]))))
-            remainder = s % 10
-            return 0 if not remainder else 10 - remainder
-  learner_created: true
 - name: banking/bank_cli.py
   visible: true
   text: |
@@ -486,6 +403,55 @@ files:
         def going_on(self) -> bool:
             return self._state is not Stage.EXIT
   learner_created: true
+- name: banking/db_layer.py
+  visible: true
+  learner_created: true
+- name: banking/account.py
+  visible: true
+  learner_created: true
+- name: banking/utils.py
+  visible: true
+  text: |
+    import string
+    import random
+    from itertools import cycle
+
+
+    class Utils:
+        @staticmethod
+        def get_random_digit_word(word_len: int) -> str:
+            """Creates and returns a word of length word_len consisting of random digits"""
+            return ''.join(random.choices(string.digits, k=word_len))
+
+        @staticmethod
+        def calculate_luhn_checksum(num_str: str) -> int:
+            """
+            Calculates the Luhn checksum (a single digit) for a string of digits.
+            At the end of the string passed there should be no symbol of the string checksum.
+            """
+            s = sum(i if i < 10 else i - 9 for i in (x * y for x, y in zip(map(int, num_str[::-1]), cycle([2, 1]))))
+            remainder = s % 10
+            return 0 if not remainder else 10 - remainder
+  learner_created: true
+- name: banking/controller.py
+  visible: true
+  text: |
+    from state_machine import StateMachine
+    from data_state import DataState
+    from bank_cli import BankCLI
+
+
+    class Controller:
+        def __init__(self):
+            self._state_machine = StateMachine()
+            self._bank_cli = BankCLI(DataState())
+
+        def run(self):
+            choice = 0
+            while self._state_machine.going_on():
+                self._state_machine.switch_state(choice)
+                choice = self._bank_cli.show_menu(self._state_machine.state)
+  learner_created: true
 - name: banking/my_test.py
   visible: true
   text: |
@@ -504,10 +470,47 @@ files:
 
     check_luhn_calculation()
   learner_created: true
-- name: banking/card.py
+- name: banking/data_state.py
   visible: true
+  text: |
+    from typing import Tuple, Dict, Set
+
+    from utils import Utils
+
+
+    class DataState:
+        def __init__(self):
+            self._card_dict: Dict[str, str] = {}
+            self._unique_accounts: Set[str] = set()
+
+        def create_account(self) -> Tuple[str, str]:
+            """Creates a new account, returns the card number and its pin"""
+
+            card_number = self._create_card_number()
+            pin = Utils.get_random_digit_word(4)
+            self._card_dict[card_number] = pin
+            return card_number, pin
+
+        def _create_card_number(self):
+            account_number = ''
+            while not account_number or account_number in self._unique_accounts:
+                account_number = Utils.get_random_digit_word(9)
+
+            _15_digits = '400000' + account_number
+            return _15_digits + str(Utils.calculate_luhn_checksum(_15_digits))
+
+        def card_and_pin_are_correct(self, card_number: str, pin: str) -> bool:
+            return card_number in self._card_dict and self._card_dict[card_number] == pin
+
+        def card_balance(self, card_number: str) -> int:
+            return 0
   learner_created: true
-- name: banking/db_layer.py
+- name: banking/banking.py
+  visible: true
+  text: |
+    # Write your code here
+  learner_created: false
+- name: banking/card.s3db
   visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/projects/109/stages/593/implement#comment

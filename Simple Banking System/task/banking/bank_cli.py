@@ -38,13 +38,13 @@ class BankCLI:
 '''))
 
     def _create_account(self):
-        card_number, pin = self._data_state.create_account()
+        acc = self._data_state.create_account()
         print(f'''
 Your card has been created
 Your card number:
-{card_number}
+{acc.number}
 Your card PIN:
-{pin}''')
+{acc.pin}''')
 
     def _log_into_account(self) -> int:
         self.card_number = input('\nEnter your card number:\n')
