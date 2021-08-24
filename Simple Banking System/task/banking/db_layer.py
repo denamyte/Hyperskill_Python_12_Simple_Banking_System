@@ -15,7 +15,7 @@ class DBLayer:
         );'''
     QUERY_INSERT_CARD = f'''
         INSERT INTO {TABLE_NAME}(number, pin, balance)
-            VALUES (:num, :pin, :bal);'''
+            VALUES (?, ?, ?);'''
     QUERY_COUNT_CARD = f'''
         SELECT COUNT(*) AS cnt 
         FROM {TABLE_NAME};'''
@@ -26,13 +26,13 @@ class DBLayer:
 
     def __init__(self):
         self.conn: Union[None, sql.Connection] = None
-        self.connection()
-        self.create_db()
+        self._connection()
+        self._create_db()
 
-    def connection(self):
+    def _connection(self):
         self.conn = sql.connect(self.DB_NAME)
 
-    def create_db(self):
+    def _create_db(self):
         cursor = self.conn.cursor()
         cursor.execute(self.QUERY_CREATE_DB)
         self.conn.commit()
@@ -40,7 +40,7 @@ class DBLayer:
 
     def create_account(self, acc: Account):
         cursor = self.conn.cursor()
-        cursor.execute(self.QUERY_INSERT_CARD, {"num": acc.number, "pin": acc.pin, "bal": acc.balance})
+        cursor.execute(self.QUERY_INSERT_CARD, (acc.number, acc.pin, acc.balance))
         self.conn.commit()
         cursor.close()
 

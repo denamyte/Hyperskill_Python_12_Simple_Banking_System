@@ -23,6 +23,5 @@ def check_db_card():
     print(f'Account exists ({account.number}; expect True):', data_state.account_exists(account.number))
 
 
-
 # check_luhn_calculation()
 check_db_card()

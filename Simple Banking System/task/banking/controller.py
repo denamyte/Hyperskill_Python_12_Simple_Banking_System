@@ -12,7 +12,7 @@ class Controller:
         self._bank_cli = BankCLI(data_state)
 
     def run(self):
-        choice = 0
+        user_input = 0
         while self._state_machine.going_on():
-            self._state_machine.switch_state(choice)
-            choice = self._bank_cli.show_menu(self._state_machine.state)
+            state = self._state_machine.switch_state(user_input)
+            user_input = self._bank_cli.show_menu(state)

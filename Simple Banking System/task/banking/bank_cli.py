@@ -17,14 +17,17 @@ class BankCLI:
             Stage.MAIN_MENU: self._main_menu,
             Stage.CREATE_ACCOUNT: self._create_account,
             Stage.LOG_INTO_ACCOUNT: self._log_into_account,
-            Stage.LOG_IN_FAILED: lambda: print(self._SIMPLE_MESSAGES.get(Stage.LOG_IN_FAILED)),
-            Stage.LOGGED_IN: lambda: print(self._SIMPLE_MESSAGES.get(Stage.LOGGED_IN)),
+            Stage.LOG_IN_FAILED: self._fn_message(Stage.LOG_IN_FAILED),
+            Stage.LOGGED_IN: self._fn_message(Stage.LOGGED_IN),
             Stage.ACCOUNT_MENU: self._account_menu,
             Stage.ACCOUNT_BALANCE: self._account_balance,
-            Stage.ACCOUNT_LOG_OUT: lambda: print(self._SIMPLE_MESSAGES.get(Stage.ACCOUNT_LOG_OUT)),
-            Stage.EXIT: lambda: print(self._SIMPLE_MESSAGES.get(Stage.EXIT)),
+            Stage.ACCOUNT_LOG_OUT: self._fn_message(Stage.ACCOUNT_LOG_OUT),
+            Stage.EXIT: self._fn_message(Stage.EXIT),
         }
         self.card_number = ''
+
+    def _fn_message(self, stage: Stage) -> Callable[[], None]:
+        return lambda: print(self._SIMPLE_MESSAGES.get(stage))
 
     def show_menu(self, stage: Stage) -> int:
         return self._actions[stage]()

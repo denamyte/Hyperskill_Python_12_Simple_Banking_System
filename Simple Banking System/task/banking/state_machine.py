@@ -53,9 +53,5 @@ class StateMachine:
 
         return self._state
 
-    @property
-    def state(self):
-        return self._state
-
     def going_on(self) -> bool:
         return self._state is not Stage.EXIT
