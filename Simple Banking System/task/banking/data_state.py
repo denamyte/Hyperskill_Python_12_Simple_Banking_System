@@ -9,7 +9,7 @@ class DataState:
         self._db_layer = db_layer
 
     def create_account(self) -> Account:
-        """Creates a new account, returns the card number and its pin"""
+        """Creates a new account, returns an Account instance"""
 
         account = Account(0, self._create_card_number(),
                           Utils.get_random_digit_word(4))
