@@ -422,6 +422,312 @@ files:
     if __name__ == '__main__':
         BankingSystem('banking.banking').run_tests()
   learner_created: false
+- name: banking/data_state.py
+  visible: true
+  text: |
+    from typing import Tuple, Dict, Set
+    from utils import Utils
+    from account import Account
+    from db_layer import DBLayer
+
+
+    class DataState:
+        def __init__(self, db_layer: DBLayer):
+            self._db_layer = db_layer
+
+        def create_account(self) -> Account:
+            """Creates a new account, returns an Account instance"""
+
+            account = Account(0, self._create_card_number(),
+                              Utils.get_random_digit_word(4))
+            self._db_layer.create_account(account)
+            return account
+
+        def account_exists(self, number: str) -> bool:
+            return bool(self._db_layer.get_account_by_number(number))
+
+        def _create_card_number(self):
+            card_number = ''
+            while not card_number or self.account_exists(card_number):
+                account_number = Utils.get_random_digit_word(9)
+                _15_digits = '400000' + account_number
+                card_number = _15_digits + str(Utils.calculate_luhn_checksum(_15_digits))
+
+            return card_number
+
+        def card_and_pin_are_correct(self, number: str, pin: str) -> bool:
+            acc = self._db_layer.get_account_by_number(number)
+            return acc and acc.pin == pin
+
+        def card_balance(self, number: str) -> int:
+            acc = self._db_layer.get_account_by_number(number)
+            return 0 if not acc else acc.balance
+  learner_created: true
+- name: banking/controller.py
+  visible: true
+  text: |
+    from state_machine import StateMachine
+    from data_state import DataState
+    from bank_cli import BankCLI
+    from db_layer import DBLayer
+
+
+    class Controller:
+        def __init__(self):
+            self._state_machine = StateMachine()
+            db_layer = DBLayer()
+            data_state = DataState(db_layer)
+            self._bank_cli = BankCLI(data_state)
+
+        def run(self):
+            user_input = 0
+            while self._state_machine.going_on():
+                state = self._state_machine.switch_state(user_input)
+                user_input = self._bank_cli.show_menu(state)
+  learner_created: true
+- name: banking/account.py
+  visible: true
+  text: |
+    class Account:
+
+        def __init__(self, id: int, number: str, pin: str, balance: int = 0):
+            self._id = id
+            self._number = number
+            self._pin = pin
+            self._balance = balance
+
+        @property
+        def id(self):
+            return self._id
+
+        @property
+        def number(self):
+            return self._number
+
+        @property
+        def pin(self):
+            return self._pin
+
+        @property
+        def balance(self):
+            return self._balance
+
+        def change_balance(self, amount: int):
+            if self._balance + amount > 0:
+                self._balance += amount
+
+        def __str__(self):
+            return f'Account: id {self.id}, number {self.number}, pin {self.pin}, balance {self.balance}'
+  learner_created: true
+- name: banking/utils.py
+  visible: true
+  text: |
+    import string
+    import random
+    from itertools import cycle
+
+
+    class Utils:
+        @staticmethod
+        def get_random_digit_word(word_len: int) -> str:
+            """Creates and returns a word of length word_len consisting of random digits"""
+            return ''.join(random.choices(string.digits, k=word_len))
+
+        @staticmethod
+        def calculate_luhn_checksum(num_str: str) -> int:
+            """
+            Calculates the Luhn checksum (a single digit) for a string of digits.
+            At the end of the string passed there should be no symbol of the string checksum.
+            """
+            s = sum(i if i < 10 else i - 9 for i in (x * y for x, y in zip(map(int, num_str[::-1]), cycle([2, 1]))))
+            remainder = s % 10
+            return 0 if not remainder else 10 - remainder
+  learner_created: true
+- name: banking/db_layer.py
+  visible: true
+  text: "import sqlite3 as sql\nfrom typing import Union, Optional\nfrom account import\
+    \ Account\n\n\nclass DBLayer:\n    DB_NAME = 'card.s3db'\n    TABLE_NAME = 'card'\n\
+    \    QUERY_CREATE_DB = f'''\n        CREATE TABLE IF NOT EXISTS {TABLE_NAME} (\n\
+    \            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            number TEXT,\n\
+    \            pin TEXT,\n            balance INTEGER DEFAULT 0\n        );'''\n\
+    \    QUERY_INSERT_CARD = f'''\n        INSERT INTO {TABLE_NAME}(number, pin, balance)\n\
+    \            VALUES (?, ?, ?);'''\n    QUERY_COUNT_CARD = f'''\n        SELECT\
+    \ COUNT(*) AS cnt \n        FROM {TABLE_NAME};'''\n    QUERY_CARD_BY_NUMBER =\
+    \ f'''\n        SELECT id, number, pin, balance\n        FROM {TABLE_NAME}\n \
+    \       WHERE number = :num;'''\n\n    def __init__(self):\n        self.conn:\
+    \ Union[None, sql.Connection] = None\n        self._connection()\n        self._create_db()\n\
+    \n    def _connection(self):\n        self.conn = sql.connect(self.DB_NAME)\n\n\
+    \    def _create_db(self):\n        cursor = self.conn.cursor()\n        cursor.execute(self.QUERY_CREATE_DB)\n\
+    \        self.conn.commit()\n        cursor.close()\n\n    def create_account(self,\
+    \ acc: Account):\n        cursor = self.conn.cursor()\n        cursor.execute(self.QUERY_INSERT_CARD,\
+    \ (acc.number, acc.pin, acc.balance))\n        self.conn.commit()\n        cursor.close()\n\
+    \n    def get_account_by_number(self, number: str) -> Optional[Account]:\n   \
+    \     cursor = self.conn.cursor().execute(self.QUERY_CARD_BY_NUMBER, {\"num\"\
+    : number})\n        fetch = cursor.fetchone()\n        acc = None if not fetch\
+    \ else Account(*fetch)\n        cursor.close()\n        return acc\n"
+  learner_created: true
+- name: banking/bank_cli.py
+  visible: true
+  text: |
+    from typing import Dict, Callable
+    from data_state import DataState
+    from state_machine import Stage
+
+
+    class BankCLI:
+        _SIMPLE_MESSAGES: Dict[Stage, str] = {
+            Stage.LOG_IN_FAILED: '\nWrong card number or PIN!',
+            Stage.LOGGED_IN: '\nYou have successfully logged in!',
+            Stage.ACCOUNT_LOG_OUT: '\nYou have successfully logged out!',
+            Stage.EXIT: '\nBye!'
+        }
+
+        def __init__(self, data_state: DataState):
+            self._data_state = data_state
+            self._actions: Dict[Stage, Callable[[], int]] = {
+                Stage.MAIN_MENU: self._main_menu,
+                Stage.CREATE_ACCOUNT: self._create_account,
+                Stage.LOG_INTO_ACCOUNT: self._log_into_account,
+                Stage.LOG_IN_FAILED: self._fn_message(Stage.LOG_IN_FAILED),
+                Stage.LOGGED_IN: self._fn_message(Stage.LOGGED_IN),
+                Stage.ACCOUNT_MENU: self._account_menu,
+                Stage.ACCOUNT_BALANCE: self._account_balance,
+                Stage.ACCOUNT_LOG_OUT: self._fn_message(Stage.ACCOUNT_LOG_OUT),
+                Stage.EXIT: self._fn_message(Stage.EXIT),
+            }
+            self.card_number = ''
+
+        def _fn_message(self, stage: Stage) -> Callable[[], None]:
+            return lambda: print(self._SIMPLE_MESSAGES.get(stage))
+
+        def show_menu(self, stage: Stage) -> int:
+            return self._actions[stage]()
+
+        @staticmethod
+        def _main_menu() -> int:
+            return int(input('''
+    1. Create an account
+    2. Log into account
+    0. Exit
+    '''))
+
+        def _create_account(self):
+            acc = self._data_state.create_account()
+            print(f'''
+    Your card has been created
+    Your card number:
+    {acc.number}
+    Your card PIN:
+    {acc.pin}''')
+
+        def _log_into_account(self) -> int:
+            self.card_number = input('\nEnter your card number:\n')
+            pin = input('Enter your PIN:\n')
+            return 1 if self._data_state.card_and_pin_are_correct(self.card_number, pin) else 0
+
+        @staticmethod
+        def _account_menu() -> int:
+            return int(input('''
+    1. Balance
+    2. Log out
+    0. Exit
+    '''))
+
+        def _account_balance(self):
+            print(f'\nBalance: {self._data_state.card_balance(self.card_number)}')
+  learner_created: true
+- name: banking/state_machine.py
+  visible: true
+  text: |
+    from enum import Enum, auto
+
+
+    class Stage(Enum):
+        NONE = auto()
+        MAIN_MENU = auto()
+        CREATE_ACCOUNT = auto()
+        LOG_INTO_ACCOUNT = auto()
+        LOG_IN_FAILED = auto()
+        LOGGED_IN = auto()
+        ACCOUNT_MENU = auto()
+        ACCOUNT_BALANCE = auto()
+        ACCOUNT_LOG_OUT = auto()
+        EXIT = auto()
+
+
+    class StateMachine:
+
+        def __init__(self):
+            self._state: Stage = Stage.NONE
+
+        def switch_state(self, choice: int = 0) -> Stage:
+            if self._state == Stage.NONE:
+                self._state = Stage.MAIN_MENU
+
+            elif self._state == Stage.MAIN_MENU:
+                self._state = Stage.CREATE_ACCOUNT if choice == 1 \
+                    else Stage.LOG_INTO_ACCOUNT if choice == 2 \
+                    else Stage.EXIT
+
+            elif self._state == Stage.CREATE_ACCOUNT:
+                self._state = Stage.MAIN_MENU
+
+            elif self._state == Stage.LOG_INTO_ACCOUNT:
+                self._state = Stage.LOG_IN_FAILED if choice == 0 else Stage.LOGGED_IN
+
+            elif self._state == Stage.LOG_IN_FAILED:
+                self._state = Stage.MAIN_MENU
+
+            elif self._state == Stage.LOGGED_IN:
+                self._state = Stage.ACCOUNT_MENU
+
+            elif self._state == Stage.ACCOUNT_MENU:
+                self._state = Stage.ACCOUNT_BALANCE if choice == 1 \
+                    else Stage.ACCOUNT_LOG_OUT if choice == 2 \
+                    else Stage.EXIT
+
+            elif self._state == Stage.ACCOUNT_BALANCE:
+                self._state = Stage.ACCOUNT_MENU
+
+            elif self._state == Stage.ACCOUNT_LOG_OUT:
+                self._state = Stage.MAIN_MENU
+
+            return self._state
+
+        def going_on(self) -> bool:
+            return self._state is not Stage.EXIT
+  learner_created: true
+- name: banking/my_test.py
+  visible: true
+  text: |
+    from utils import Utils
+    from db_layer import DBLayer
+    from data_state import DataState
+
+
+    def check_luhn_calculation():
+        card_num1 = '400000' + '123123123'
+        checksum1 = 4
+        print('checksum1 is valid:', checksum1 == Utils.calculate_luhn_checksum(card_num1))
+
+        card_num2 = '400000' + '654654654'
+        checksum2 = 9
+        print('checksum2 is valid:', checksum2 == Utils.calculate_luhn_checksum(card_num2))
+
+
+    def check_db_card():
+        db_layer = DBLayer()
+        data_state = DataState(db_layer)
+
+        print('Account exists (expect False):', data_state.account_exists('1234123412341238'))
+        account = data_state.create_account()
+        print('Account created:', account)
+        print(f'Account exists ({account.number}; expect True):', data_state.account_exists(account.number))
+
+
+    # check_luhn_calculation()
+    check_db_card()
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/109/stages/594/implement#comment
 status: Unchecked
 record: -1

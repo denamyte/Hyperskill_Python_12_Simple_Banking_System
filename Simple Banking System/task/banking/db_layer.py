@@ -5,23 +5,26 @@ from account import Account
 
 class DBLayer:
     DB_NAME = 'card.s3db'
-    TABLE_NAME = 'card'
     QUERY_CREATE_DB = f'''
-        CREATE TABLE IF NOT EXISTS {TABLE_NAME} (
+        CREATE TABLE IF NOT EXISTS card (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             number TEXT,
             pin TEXT,
             balance INTEGER DEFAULT 0
         );'''
     QUERY_INSERT_CARD = f'''
-        INSERT INTO {TABLE_NAME}(number, pin, balance)
+        INSERT INTO card(number, pin, balance)
             VALUES (?, ?, ?);'''
     QUERY_COUNT_CARD = f'''
         SELECT COUNT(*) AS cnt 
-        FROM {TABLE_NAME};'''
+        FROM card;'''
     QUERY_CARD_BY_NUMBER = f'''
         SELECT id, number, pin, balance
-        FROM {TABLE_NAME}
+        FROM card
+        WHERE number = :num;'''
+    QUERY_ADD_INCOME = f'''
+        UPDATE card
+        SET balance = balance + :inc
         WHERE number = :num;'''
 
     def __init__(self):
@@ -45,8 +48,13 @@ class DBLayer:
         cursor.close()
 
     def get_account_by_number(self, number: str) -> Optional[Account]:
-        cursor = self.conn.cursor().execute(self.QUERY_CARD_BY_NUMBER, {"num": number})
+        cursor = self.conn.cursor().execute(self.QUERY_CARD_BY_NUMBER, {'num': number})
         fetch = cursor.fetchone()
         acc = None if not fetch else Account(*fetch)
         cursor.close()
         return acc
+
+    def add_income(self, number: str, income: int):
+        cursor = self.conn.cursor().execute(self.QUERY_ADD_INCOME, {'num': number, 'inc': income})
+        self.conn.commit()
+        cursor.close()

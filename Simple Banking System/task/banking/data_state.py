@@ -16,8 +16,8 @@ class DataState:
         self._db_layer.create_account(account)
         return account
 
-    def account_exists(self, number: str) -> bool:
-        return bool(self._db_layer.get_account_by_number(number))
+    def account_exists(self, card_number: str) -> bool:
+        return bool(self._db_layer.get_account_by_number(card_number))
 
     def _create_card_number(self):
         card_number = ''
@@ -28,10 +28,22 @@ class DataState:
 
         return card_number
 
-    def card_and_pin_are_correct(self, number: str, pin: str) -> bool:
-        acc = self._db_layer.get_account_by_number(number)
+    @staticmethod
+    def luhn_checksum_correct(card_number: str) -> bool:
+        last_digit = card_number[-1]
+        checksum = str(Utils.calculate_luhn_checksum(card_number[:-1]))
+        return last_digit == checksum
+
+    def card_exists(self, card_number: str) -> bool:
+        return bool(self._db_layer.get_account_by_number(card_number))
+
+    def card_and_pin_are_correct(self, card_number: str, pin: str) -> bool:
+        acc = self._db_layer.get_account_by_number(card_number)
         return acc and acc.pin == pin
 
-    def card_balance(self, number: str) -> int:
-        acc = self._db_layer.get_account_by_number(number)
+    def card_balance(self, card_number: str) -> int:
+        acc = self._db_layer.get_account_by_number(card_number)
         return 0 if not acc else acc.balance
+
+    def add_income(self, card_number: str, income: int):
+        self._db_layer.add_income(card_number, income)

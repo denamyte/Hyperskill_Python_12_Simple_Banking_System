@@ -274,132 +274,6 @@ files:
 - name: banking/card.s3db
   visible: true
   learner_created: true
-- name: banking/state_machine.py
-  visible: true
-  text: |
-    from enum import Enum, auto
-
-
-    class Stage(Enum):
-        NONE = auto()
-        MAIN_MENU = auto()
-        CREATE_ACCOUNT = auto()
-        LOG_INTO_ACCOUNT = auto()
-        LOG_IN_FAILED = auto()
-        LOGGED_IN = auto()
-        ACCOUNT_MENU = auto()
-        ACCOUNT_BALANCE = auto()
-        ACCOUNT_LOG_OUT = auto()
-        EXIT = auto()
-
-
-    class StateMachine:
-
-        def __init__(self):
-            self._state: Stage = Stage.NONE
-
-        def switch_state(self, choice: int = 0) -> Stage:
-            if self._state == Stage.NONE:
-                self._state = Stage.MAIN_MENU
-
-            elif self._state == Stage.MAIN_MENU:
-                self._state = Stage.CREATE_ACCOUNT if choice == 1 \
-                    else Stage.LOG_INTO_ACCOUNT if choice == 2 \
-                    else Stage.EXIT
-
-            elif self._state == Stage.CREATE_ACCOUNT:
-                self._state = Stage.MAIN_MENU
-
-            elif self._state == Stage.LOG_INTO_ACCOUNT:
-                self._state = Stage.LOG_IN_FAILED if choice == 0 else Stage.LOGGED_IN
-
-            elif self._state == Stage.LOG_IN_FAILED:
-                self._state = Stage.MAIN_MENU
-
-            elif self._state == Stage.LOGGED_IN:
-                self._state = Stage.ACCOUNT_MENU
-
-            elif self._state == Stage.ACCOUNT_MENU:
-                self._state = Stage.ACCOUNT_BALANCE if choice == 1 \
-                    else Stage.ACCOUNT_LOG_OUT if choice == 2 \
-                    else Stage.EXIT
-
-            elif self._state == Stage.ACCOUNT_BALANCE:
-                self._state = Stage.ACCOUNT_MENU
-
-            elif self._state == Stage.ACCOUNT_LOG_OUT:
-                self._state = Stage.MAIN_MENU
-
-            return self._state
-
-        @property
-        def state(self):
-            return self._state
-
-        def going_on(self) -> bool:
-            return self._state is not Stage.EXIT
-  learner_created: true
-- name: banking/utils.py
-  visible: true
-  text: |
-    import string
-    import random
-    from itertools import cycle
-
-
-    class Utils:
-        @staticmethod
-        def get_random_digit_word(word_len: int) -> str:
-            """Creates and returns a word of length word_len consisting of random digits"""
-            return ''.join(random.choices(string.digits, k=word_len))
-
-        @staticmethod
-        def calculate_luhn_checksum(num_str: str) -> int:
-            """
-            Calculates the Luhn checksum (a single digit) for a string of digits.
-            At the end of the string passed there should be no symbol of the string checksum.
-            """
-            s = sum(i if i < 10 else i - 9 for i in (x * y for x, y in zip(map(int, num_str[::-1]), cycle([2, 1]))))
-            remainder = s % 10
-            return 0 if not remainder else 10 - remainder
-  learner_created: true
-- name: banking/controller.py
-  visible: true
-  text: |
-    from state_machine import StateMachine
-    from data_state import DataState
-    from bank_cli import BankCLI
-
-
-    class Controller:
-        def __init__(self):
-            self._state_machine = StateMachine()
-            self._bank_cli = BankCLI(DataState())
-
-        def run(self):
-            choice = 0
-            while self._state_machine.going_on():
-                self._state_machine.switch_state(choice)
-                choice = self._bank_cli.show_menu(self._state_machine.state)
-  learner_created: true
-- name: banking/my_test.py
-  visible: true
-  text: |
-    from utils import Utils
-
-
-    def check_luhn_calculation():
-        card_num1 = '400000' + '123123123'
-        checksum1 = 4
-        print('checksum1 is valid:', checksum1 == Utils.calculate_luhn_checksum(card_num1))
-
-        card_num2 = '400000' + '654654654'
-        checksum2 = 9
-        print('checksum2 is valid:', checksum2 == Utils.calculate_luhn_checksum(card_num2))
-
-
-    check_luhn_calculation()
-  learner_created: true
 - name: banking/bank_cli.py
   visible: true
   text: |
@@ -467,11 +341,137 @@ files:
         def _account_balance(self):
             print(f'\nBalance: {self._data_state.card_balance(self.card_number)}')
   learner_created: true
+- name: banking/state_machine.py
+  visible: true
+  text: |
+    from enum import Enum, auto
+
+
+    class Stage(Enum):
+        NONE = auto()
+        MAIN_MENU = auto()
+        CREATE_ACCOUNT = auto()
+        LOG_INTO_ACCOUNT = auto()
+        LOG_IN_FAILED = auto()
+        LOGGED_IN = auto()
+        ACCOUNT_MENU = auto()
+        ACCOUNT_BALANCE = auto()
+        ACCOUNT_LOG_OUT = auto()
+        EXIT = auto()
+
+
+    class StateMachine:
+
+        def __init__(self):
+            self._state: Stage = Stage.NONE
+
+        def switch_state(self, choice: int = 0) -> Stage:
+            if self._state == Stage.NONE:
+                self._state = Stage.MAIN_MENU
+
+            elif self._state == Stage.MAIN_MENU:
+                self._state = Stage.CREATE_ACCOUNT if choice == 1 \
+                    else Stage.LOG_INTO_ACCOUNT if choice == 2 \
+                    else Stage.EXIT
+
+            elif self._state == Stage.CREATE_ACCOUNT:
+                self._state = Stage.MAIN_MENU
+
+            elif self._state == Stage.LOG_INTO_ACCOUNT:
+                self._state = Stage.LOG_IN_FAILED if choice == 0 else Stage.LOGGED_IN
+
+            elif self._state == Stage.LOG_IN_FAILED:
+                self._state = Stage.MAIN_MENU
+
+            elif self._state == Stage.LOGGED_IN:
+                self._state = Stage.ACCOUNT_MENU
+
+            elif self._state == Stage.ACCOUNT_MENU:
+                self._state = Stage.ACCOUNT_BALANCE if choice == 1 \
+                    else Stage.ACCOUNT_LOG_OUT if choice == 2 \
+                    else Stage.EXIT
+
+            elif self._state == Stage.ACCOUNT_BALANCE:
+                self._state = Stage.ACCOUNT_MENU
+
+            elif self._state == Stage.ACCOUNT_LOG_OUT:
+                self._state = Stage.MAIN_MENU
+
+            return self._state
+
+        @property
+        def state(self):
+            return self._state
+
+        def going_on(self) -> bool:
+            return self._state is not Stage.EXIT
+  learner_created: true
 - name: banking/db_layer.py
   visible: true
   learner_created: true
 - name: banking/account.py
   visible: true
+  learner_created: true
+- name: banking/utils.py
+  visible: true
+  text: |
+    import string
+    import random
+    from itertools import cycle
+
+
+    class Utils:
+        @staticmethod
+        def get_random_digit_word(word_len: int) -> str:
+            """Creates and returns a word of length word_len consisting of random digits"""
+            return ''.join(random.choices(string.digits, k=word_len))
+
+        @staticmethod
+        def calculate_luhn_checksum(num_str: str) -> int:
+            """
+            Calculates the Luhn checksum (a single digit) for a string of digits.
+            At the end of the string passed there should be no symbol of the string checksum.
+            """
+            s = sum(i if i < 10 else i - 9 for i in (x * y for x, y in zip(map(int, num_str[::-1]), cycle([2, 1]))))
+            remainder = s % 10
+            return 0 if not remainder else 10 - remainder
+  learner_created: true
+- name: banking/controller.py
+  visible: true
+  text: |
+    from state_machine import StateMachine
+    from data_state import DataState
+    from bank_cli import BankCLI
+
+
+    class Controller:
+        def __init__(self):
+            self._state_machine = StateMachine()
+            self._bank_cli = BankCLI(DataState())
+
+        def run(self):
+            choice = 0
+            while self._state_machine.going_on():
+                self._state_machine.switch_state(choice)
+                choice = self._bank_cli.show_menu(self._state_machine.state)
+  learner_created: true
+- name: banking/my_test.py
+  visible: true
+  text: |
+    from utils import Utils
+
+
+    def check_luhn_calculation():
+        card_num1 = '400000' + '123123123'
+        checksum1 = 4
+        print('checksum1 is valid:', checksum1 == Utils.calculate_luhn_checksum(card_num1))
+
+        card_num2 = '400000' + '654654654'
+        checksum2 = 9
+        print('checksum2 is valid:', checksum2 == Utils.calculate_luhn_checksum(card_num2))
+
+
+    check_luhn_calculation()
   learner_created: true
 - name: banking/data_state.py
   visible: true
@@ -513,18 +513,9 @@ files:
   text: |
     # Write your code here
   learner_created: false
-- name: temp.s3db
-  visible: true
-  learner_created: true
-- name: card.s3db
-  visible: true
-  learner_created: true
-- name: card.s3db-journal
-  visible: true
-  learner_created: true
 feedback_link: https://hyperskill.org/projects/109/stages/593/implement#comment
 status: Solved
 feedback:
   message: Congratulations!
-  time: Tue, 24 Aug 2021 23:09:39 UTC
-record: -1
+  time: Tue, 24 Aug 2021 23:25:28 UTC
+record: 3
