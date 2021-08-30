@@ -1,10 +1,5 @@
 type: edu
 files:
-- name: banking/banking.py
-  visible: true
-  text: |
-    # Write your code here
-  learner_created: false
 - name: tests.py
   visible: false
   text: |
@@ -422,69 +417,6 @@ files:
     if __name__ == '__main__':
         BankingSystem('banking.banking').run_tests()
   learner_created: false
-- name: banking/data_state.py
-  visible: true
-  text: |
-    from typing import Tuple, Dict, Set
-    from utils import Utils
-    from account import Account
-    from db_layer import DBLayer
-
-
-    class DataState:
-        def __init__(self, db_layer: DBLayer):
-            self._db_layer = db_layer
-
-        def create_account(self) -> Account:
-            """Creates a new account, returns an Account instance"""
-
-            account = Account(0, self._create_card_number(),
-                              Utils.get_random_digit_word(4))
-            self._db_layer.create_account(account)
-            return account
-
-        def account_exists(self, number: str) -> bool:
-            return bool(self._db_layer.get_account_by_number(number))
-
-        def _create_card_number(self):
-            card_number = ''
-            while not card_number or self.account_exists(card_number):
-                account_number = Utils.get_random_digit_word(9)
-                _15_digits = '400000' + account_number
-                card_number = _15_digits + str(Utils.calculate_luhn_checksum(_15_digits))
-
-            return card_number
-
-        def card_and_pin_are_correct(self, number: str, pin: str) -> bool:
-            acc = self._db_layer.get_account_by_number(number)
-            return acc and acc.pin == pin
-
-        def card_balance(self, number: str) -> int:
-            acc = self._db_layer.get_account_by_number(number)
-            return 0 if not acc else acc.balance
-  learner_created: true
-- name: banking/controller.py
-  visible: true
-  text: |
-    from state_machine import StateMachine
-    from data_state import DataState
-    from bank_cli import BankCLI
-    from db_layer import DBLayer
-
-
-    class Controller:
-        def __init__(self):
-            self._state_machine = StateMachine()
-            db_layer = DBLayer()
-            data_state = DataState(db_layer)
-            self._bank_cli = BankCLI(data_state)
-
-        def run(self):
-            user_input = 0
-            while self._state_machine.going_on():
-                state = self._state_machine.switch_state(user_input)
-                user_input = self._bank_cli.show_menu(state)
-  learner_created: true
 - name: banking/account.py
   visible: true
   text: |
@@ -542,29 +474,6 @@ files:
             s = sum(i if i < 10 else i - 9 for i in (x * y for x, y in zip(map(int, num_str[::-1]), cycle([2, 1]))))
             remainder = s % 10
             return 0 if not remainder else 10 - remainder
-  learner_created: true
-- name: banking/db_layer.py
-  visible: true
-  text: "import sqlite3 as sql\nfrom typing import Union, Optional\nfrom account import\
-    \ Account\n\n\nclass DBLayer:\n    DB_NAME = 'card.s3db'\n    TABLE_NAME = 'card'\n\
-    \    QUERY_CREATE_DB = f'''\n        CREATE TABLE IF NOT EXISTS {TABLE_NAME} (\n\
-    \            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            number TEXT,\n\
-    \            pin TEXT,\n            balance INTEGER DEFAULT 0\n        );'''\n\
-    \    QUERY_INSERT_CARD = f'''\n        INSERT INTO {TABLE_NAME}(number, pin, balance)\n\
-    \            VALUES (?, ?, ?);'''\n    QUERY_COUNT_CARD = f'''\n        SELECT\
-    \ COUNT(*) AS cnt \n        FROM {TABLE_NAME};'''\n    QUERY_CARD_BY_NUMBER =\
-    \ f'''\n        SELECT id, number, pin, balance\n        FROM {TABLE_NAME}\n \
-    \       WHERE number = :num;'''\n\n    def __init__(self):\n        self.conn:\
-    \ Union[None, sql.Connection] = None\n        self._connection()\n        self._create_db()\n\
-    \n    def _connection(self):\n        self.conn = sql.connect(self.DB_NAME)\n\n\
-    \    def _create_db(self):\n        cursor = self.conn.cursor()\n        cursor.execute(self.QUERY_CREATE_DB)\n\
-    \        self.conn.commit()\n        cursor.close()\n\n    def create_account(self,\
-    \ acc: Account):\n        cursor = self.conn.cursor()\n        cursor.execute(self.QUERY_INSERT_CARD,\
-    \ (acc.number, acc.pin, acc.balance))\n        self.conn.commit()\n        cursor.close()\n\
-    \n    def get_account_by_number(self, number: str) -> Optional[Account]:\n   \
-    \     cursor = self.conn.cursor().execute(self.QUERY_CARD_BY_NUMBER, {\"num\"\
-    : number})\n        fetch = cursor.fetchone()\n        acc = None if not fetch\
-    \ else Account(*fetch)\n        cursor.close()\n        return acc\n"
   learner_created: true
 - name: banking/bank_cli.py
   visible: true
@@ -697,37 +606,110 @@ files:
         def going_on(self) -> bool:
             return self._state is not Stage.EXIT
   learner_created: true
-- name: banking/my_test.py
+- name: banking/db_layer.py
+  visible: true
+  text: "import sqlite3 as sql\nfrom typing import Union, Optional\nfrom account import\
+    \ Account\n\n\nclass DBLayer:\n    DB_NAME = 'card.s3db'\n    TABLE_NAME = 'card'\n\
+    \    QUERY_CREATE_DB = f'''\n        CREATE TABLE IF NOT EXISTS {TABLE_NAME} (\n\
+    \            id INTEGER PRIMARY KEY AUTOINCREMENT,\n            number TEXT,\n\
+    \            pin TEXT,\n            balance INTEGER DEFAULT 0\n        );'''\n\
+    \    QUERY_INSERT_CARD = f'''\n        INSERT INTO {TABLE_NAME}(number, pin, balance)\n\
+    \            VALUES (?, ?, ?);'''\n    QUERY_COUNT_CARD = f'''\n        SELECT\
+    \ COUNT(*) AS cnt \n        FROM {TABLE_NAME};'''\n    QUERY_CARD_BY_NUMBER =\
+    \ f'''\n        SELECT id, number, pin, balance\n        FROM {TABLE_NAME}\n \
+    \       WHERE number = :num;'''\n\n    def __init__(self):\n        self.conn:\
+    \ Union[None, sql.Connection] = None\n        self._connection()\n        self._create_db()\n\
+    \n    def _connection(self):\n        self.conn = sql.connect(self.DB_NAME)\n\n\
+    \    def _create_db(self):\n        cursor = self.conn.cursor()\n        cursor.execute(self.QUERY_CREATE_DB)\n\
+    \        self.conn.commit()\n        cursor.close()\n\n    def create_account(self,\
+    \ acc: Account):\n        cursor = self.conn.cursor()\n        cursor.execute(self.QUERY_INSERT_CARD,\
+    \ (acc.number, acc.pin, acc.balance))\n        self.conn.commit()\n        cursor.close()\n\
+    \n    def get_account_by_number(self, number: str) -> Optional[Account]:\n   \
+    \     cursor = self.conn.cursor().execute(self.QUERY_CARD_BY_NUMBER, {\"num\"\
+    : number})\n        fetch = cursor.fetchone()\n        acc = None if not fetch\
+    \ else Account(*fetch)\n        cursor.close()\n        return acc\n"
+  learner_created: true
+- name: banking/controller.py
   visible: true
   text: |
-    from utils import Utils
-    from db_layer import DBLayer
+    from state_machine import StateMachine
     from data_state import DataState
+    from bank_cli import BankCLI
+    from db_layer import DBLayer
 
 
-    def check_luhn_calculation():
-        card_num1 = '400000' + '123123123'
-        checksum1 = 4
-        print('checksum1 is valid:', checksum1 == Utils.calculate_luhn_checksum(card_num1))
+    class Controller:
+        def __init__(self):
+            self._state_machine = StateMachine()
+            db_layer = DBLayer()
+            data_state = DataState(db_layer)
+            self._bank_cli = BankCLI(data_state)
 
-        card_num2 = '400000' + '654654654'
-        checksum2 = 9
-        print('checksum2 is valid:', checksum2 == Utils.calculate_luhn_checksum(card_num2))
+        def run(self):
+            user_input = 0
+            while self._state_machine.going_on():
+                state = self._state_machine.switch_state(user_input)
+                user_input = self._bank_cli.show_menu(state)
+  learner_created: true
+- name: banking/banking.py
+  visible: true
+  text: |
+    # Write your code here
+  learner_created: false
+- name: banking/data_layer.py
+  visible: true
+  text: |
+    from typing import Tuple, Dict, Set
+    from utils import Utils
+    from account import Account
+    from db_layer import DBLayer
 
 
-    def check_db_card():
-        db_layer = DBLayer()
-        data_state = DataState(db_layer)
+    class DataState:
+        def __init__(self, db_layer: DBLayer):
+            self._db_layer = db_layer
 
-        print('Account exists (expect False):', data_state.account_exists('1234123412341238'))
-        account = data_state.create_account()
-        print('Account created:', account)
-        print(f'Account exists ({account.number}; expect True):', data_state.account_exists(account.number))
+        def create_account(self) -> Account:
+            """Creates a new account, returns an Account instance"""
 
+            account = Account(0, self._create_card_number(),
+                              Utils.get_random_digit_word(4))
+            self._db_layer.create_account(account)
+            return account
 
-    # check_luhn_calculation()
-    check_db_card()
+        def account_exists(self, number: str) -> bool:
+            return bool(self._db_layer.get_account_by_number(number))
+
+        def _create_card_number(self):
+            card_number = ''
+            while not card_number or self.account_exists(card_number):
+                account_number = Utils.get_random_digit_word(9)
+                _15_digits = '400000' + account_number
+                card_number = _15_digits + str(Utils.calculate_luhn_checksum(_15_digits))
+
+            return card_number
+
+        def card_and_pin_are_correct(self, number: str, pin: str) -> bool:
+            acc = self._db_layer.get_account_by_number(number)
+            return acc and acc.pin == pin
+
+        def card_balance(self, number: str) -> int:
+            acc = self._db_layer.get_account_by_number(number)
+            return 0 if not acc else acc.balance
+  learner_created: true
+- name: card.s3db
+  visible: true
+  learner_created: true
+- name: temp.s3db
+  visible: true
+  learner_created: true
+- name: card.s3db-journal
+  visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/projects/109/stages/594/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Well done! You've finished the project. Select a new project on <a href="https://hyperskill.org/projects">JetBrains
+    Academy</a> to continue learning.
+  time: Mon, 30 Aug 2021 23:39:45 UTC
 record: -1

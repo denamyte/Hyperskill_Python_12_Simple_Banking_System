@@ -26,6 +26,9 @@ class DBLayer:
         UPDATE card
         SET balance = balance + :inc
         WHERE number = :num;'''
+    QUERY_DELETE_ACCOUNT = f'''
+        DELETE FROM card
+        WHERE number = ?'''
 
     def __init__(self):
         self.conn: Union[None, sql.Connection] = None
@@ -56,5 +59,10 @@ class DBLayer:
 
     def add_income(self, number: str, income: int):
         cursor = self.conn.cursor().execute(self.QUERY_ADD_INCOME, {'num': number, 'inc': income})
+        self.conn.commit()
+        cursor.close()
+
+    def delete_account(self, card_number):
+        cursor = self.conn.cursor().execute(self.QUERY_DELETE_ACCOUNT, (card_number,))
         self.conn.commit()
         cursor.close()

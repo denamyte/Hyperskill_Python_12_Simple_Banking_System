@@ -4,13 +4,11 @@ from account import Account
 from db_layer import DBLayer
 
 
-class DataState:
+class DataLayer:
     def __init__(self, db_layer: DBLayer):
         self._db_layer = db_layer
 
     def create_account(self) -> Account:
-        """Creates a new account, returns an Account instance"""
-
         account = Account(0, self._create_card_number(),
                           Utils.get_random_digit_word(4))
         self._db_layer.create_account(account)
@@ -47,3 +45,15 @@ class DataState:
 
     def add_income(self, card_number: str, income: int):
         self._db_layer.add_income(card_number, income)
+
+    def account_has_money(self, card_number: str, money: int) -> bool:
+        account = self._db_layer.get_account_by_number(card_number)
+        return bool(account and account.balance >= money)
+
+    def transfer_money(self, card_from: str, card_to: str, money: int):
+        self._db_layer.add_income(card_from, -money)
+        self._db_layer.add_income(card_to,    money)
+
+    def delete_account(self, card_number: str):
+        self._db_layer.delete_account(card_number)
+

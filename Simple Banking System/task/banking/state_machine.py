@@ -6,8 +6,7 @@ class Stage(Enum):
     MAIN_MENU = auto()
     CREATE_ACCOUNT = auto()
     LOG_INTO_ACCOUNT = auto()
-    LOG_IN_FAILED = auto()
-    LOGGED_IN = auto()
+
     ACCOUNT_MENU = auto()
     ACCOUNT_BALANCE = auto()
     ACCOUNT_ADD_INCOME = auto()
@@ -16,8 +15,9 @@ class Stage(Enum):
     ACCOUNT_TRANSFER_CARD_2_SAME_ACCOUNT = auto()
     ACCOUNT_TRANSFER_CARD_3_LUHN = auto()
     ACCOUNT_TRANSFER_CARD_4_CARD_EXISTENCE = auto()
-
     ACCOUNT_TRANSFER_SUM_1_ENTER = auto()
+    ACCOUNT_TRANSFER_SUM_2_CHECK_SUM = auto()
+    ACCOUNT_TRANSFER_SUM_3_TRANSFER = auto()
 
     ACCOUNT_CLOSE = auto()
     ACCOUNT_LOG_OUT = auto()
@@ -42,13 +42,8 @@ class StateMachine:
             self._state = Stage.MAIN_MENU
 
         elif self._state == Stage.LOG_INTO_ACCOUNT:
-            self._state = Stage.LOG_IN_FAILED if choice == 0 else Stage.LOGGED_IN
-
-        elif self._state == Stage.LOG_IN_FAILED:
-            self._state = Stage.MAIN_MENU
-
-        elif self._state == Stage.LOGGED_IN:
-            self._state = Stage.ACCOUNT_MENU
+            self._state = Stage.ACCOUNT_MENU if choice == 1 \
+                else Stage.MAIN_MENU
 
         elif self._state == Stage.ACCOUNT_MENU:
             self._state = Stage.ACCOUNT_BALANCE if choice == 1 \
@@ -76,6 +71,16 @@ class StateMachine:
         elif self._state == Stage.ACCOUNT_TRANSFER_CARD_4_CARD_EXISTENCE:
             self._state = Stage.ACCOUNT_TRANSFER_SUM_1_ENTER if choice == 1 \
                 else Stage.ACCOUNT_MENU
+
+        elif self._state == Stage.ACCOUNT_TRANSFER_SUM_1_ENTER:
+            self._state = Stage.ACCOUNT_TRANSFER_SUM_2_CHECK_SUM
+
+        elif self._state == Stage.ACCOUNT_TRANSFER_SUM_2_CHECK_SUM:
+            self._state = Stage.ACCOUNT_TRANSFER_SUM_3_TRANSFER if choice == 1 \
+                else Stage.ACCOUNT_MENU
+
+        elif self._state == Stage.ACCOUNT_TRANSFER_SUM_3_TRANSFER:
+            self._state = Stage.ACCOUNT_MENU
 
         elif self._state == Stage.ACCOUNT_LOG_OUT \
                 or self._state == Stage.ACCOUNT_CLOSE:
