@@ -417,40 +417,6 @@ files:
     if __name__ == '__main__':
         BankingSystem('banking.banking').run_tests()
   learner_created: false
-- name: banking/account.py
-  visible: true
-  text: |
-    class Account:
-
-        def __init__(self, id: int, number: str, pin: str, balance: int = 0):
-            self._id = id
-            self._number = number
-            self._pin = pin
-            self._balance = balance
-
-        @property
-        def id(self):
-            return self._id
-
-        @property
-        def number(self):
-            return self._number
-
-        @property
-        def pin(self):
-            return self._pin
-
-        @property
-        def balance(self):
-            return self._balance
-
-        def change_balance(self, amount: int):
-            if self._balance + amount > 0:
-                self._balance += amount
-
-        def __str__(self):
-            return f'Account: id {self.id}, number {self.number}, pin {self.pin}, balance {self.balance}'
-  learner_created: true
 - name: banking/utils.py
   visible: true
   text: |
@@ -474,6 +440,9 @@ files:
             s = sum(i if i < 10 else i - 9 for i in (x * y for x, y in zip(map(int, num_str[::-1]), cycle([2, 1]))))
             remainder = s % 10
             return 0 if not remainder else 10 - remainder
+  learner_created: true
+- name: card.s3db
+  visible: true
   learner_created: true
 - name: banking/bank_cli.py
   visible: true
@@ -629,6 +598,40 @@ files:
     : number})\n        fetch = cursor.fetchone()\n        acc = None if not fetch\
     \ else Account(*fetch)\n        cursor.close()\n        return acc\n"
   learner_created: true
+- name: banking/account.py
+  visible: true
+  text: |
+    class Account:
+
+        def __init__(self, id: int, number: str, pin: str, balance: int = 0):
+            self._id = id
+            self._number = number
+            self._pin = pin
+            self._balance = balance
+
+        @property
+        def id(self):
+            return self._id
+
+        @property
+        def number(self):
+            return self._number
+
+        @property
+        def pin(self):
+            return self._pin
+
+        @property
+        def balance(self):
+            return self._balance
+
+        def change_balance(self, amount: int):
+            if self._balance + amount > 0:
+                self._balance += amount
+
+        def __str__(self):
+            return f'Account: id {self.id}, number {self.number}, pin {self.pin}, balance {self.balance}'
+  learner_created: true
 - name: banking/controller.py
   visible: true
   text: |
@@ -696,15 +699,6 @@ files:
         def card_balance(self, number: str) -> int:
             acc = self._db_layer.get_account_by_number(number)
             return 0 if not acc else acc.balance
-  learner_created: true
-- name: card.s3db
-  visible: true
-  learner_created: true
-- name: temp.s3db
-  visible: true
-  learner_created: true
-- name: card.s3db-journal
-  visible: true
   learner_created: true
 feedback_link: https://hyperskill.org/projects/109/stages/594/implement#comment
 status: Solved
